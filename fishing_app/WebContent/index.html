@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <!-- Include meta tag to ensure proper rendering and touch zooming -->
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <!-- Include jQuery Mobile stylesheets -->
+        <link rel="stylesheet" href="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.css">
+        <!-- Include the jQuery library -->
+        <script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
+        <!-- Include the jQuery Mobile library -->
+        <script src="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.js"></script>
+        <link rel="stylesheet" href="https://js.arcgis.com/3.16/esri/css/esri.css">
+        <!-- ArcGIS API for JavaScript library references -->
+        <script src="https://js.arcgis.com/3.16/"></script>   
+
+        <script> 
+                var map;
+                /* require(["esri/map", 
+                         "esri/layers/FeatureLayer", 
+                         "esri/tasks/query",
+                         "esri/InfoTemplate",
+                         "esri/dijit/InfoWindow",
+                         "dojo/dom-construct",
+                         "dojo/string",
+                         "esri/geometry/Point", 
+                         "esri/graphic", 
+                         "esri/symbols/PictureMarkerSymbol", 
+                         "dojo/on", 
+                         "dojo/dom", 
+                         "dojo/domReady!"] , function(Map, FeatureLayer, Query, InfoTemplate, InfoWindow, domConstruct, string, Point, Graphic, PictureMarkerSymbol, on, dom) {
+                    "use strict" //cannot use undeclared var
+                    //create map
+                    map = new Map("mapDiv", {
+                    center: [-121.881887,37.336535 ],  //SJSU coordinates
+                    zoom: 8,   //zoom to the bay are
+                    basemap: "streets", 
+                    //the map automatically resizes if the browser window or ContentPane widget enclosing the map is resized.
+                    autoResize: true     //auto size based on the window size
+                  });
+                    
+                    /*  
+                    //create the custom info window specifying any input options
+                    var infoWindow = new  InfoWindow({
+                          domNode: domConstruct.create("div", null, dom.byId("mapDiv"))
+                       });
+                    define the info template that is used to display the popup content.
+                    var template = new InfoTemplate();
+                    template.setTitle("<b>${Water_Area}<\/b>");  //change parameter 
+                    template.setContent("County:"${Release_county} );
+                    template.setContent(  
+                            
+                      //create the feature layer (street trees of San Francisco)
+                      var Fish_Point = new FeatureLayer("https://services.arcgis.com/V6ZHFr6zdgNZuVG0/arcgis/rest/services/Street_Trees/FeatureServer/0",{
+                        infoTemplate: template,
+                        outFields: ["*"]
+                      });
+                      map.addLayer(featureLayer);
+                      //resize the info window
+                      map.infoWindow.resize(180, 75);
+                      function getTextContent(graphic){
+                        var attr = graphic.attributes.qSpecies.replace('"',"");
+                        var names=attr.split("::");
+                        var commName = string.trim(names[1].replace('"',""));
+                        var hlink = names[0].split(" ");
+                        var sciName = hlink[0] + "_" + hlink[1];
+                        if(commName === ""){
+                          commName = names[0];
+                        }
+                        return "<b>" + commName + "<\/b><br /><a target='_blank' href=https://en.wikipedia.org/wiki/" + sciName  +">Wikipedia Entry<\/a>";
+                      }     
+                            
+                            
+     
+                    map.on("load", function (){
+                        
+                        var test_point = new Point([-122.9572,37.2995]); // test point
+                        var test_point2= new Point([-122.9573,37.2996]); 
+                        var test_symbol = new createPictureSymbol("https://raw.githubusercontent.com/Esri/solutions-symbology-data/master/symbology/web/png/Fishing-Site.png",0,12,14,16);          
+                        var test_attr = {"lat":test_point.y.toFixed(4),"lon":test_point.x.toFixed(4)};
+                        var test_attr2 = {"lat":test_point2.y.toFixed(4),"lon":test_point2.x.toFixed(4)};
+                        var info = new InfoTemplate("Your Location","Latitude: ${lat} <br/>Longitude: ${lon}");   
+                        var test_graphic = new Graphic(test_point,test_symbol,test_attr,info);
+                        var test_graphic2 = new Graphic(test_point2,test_symbol,test_attr2,info);
+                        map.graphics.add(test_graphic);
+                        map.graphics.add(test_graphic2);
+                        map.centerAndZoom(test_point,13); 
+                    });                     
+                    
+                      
+                      
+                    //set popup
+                    var popup = map.infoWindow;
+                    popup.highlight = false;
+                    popup.titleInBody = false;
+                    //get symbol
+                    var symbol = new createPictureSymbol("http://icon-park.com/imagefiles/location_map_pin_blue5.png",0,12,14,16);
+                    // Wire events
+                    on(dom.byId("btnGeolocation"),"click",showGeolocation);
+                    on(dom.byId("btnClear"), "click", clearGeolocationGraphics);
+                    //show current location
+                    function showGeolocation() {
+                        if (navigator.geolocation){
+                          navigator.geolocation.getCurrentPosition(showLocation, errorHandler);
+                          utils.setStyle("progress", "progress");
+                        } else {
+                          alert("Sorry, your browser doesn't support geolocation.");      
+                        }
+                      }
+                    function showLocation(position) {
+                        // Create a point
+                        var pt = new Point(position.coords.longitude,position.coords.latitude);
+                        // Create a symbol and pop-up template and add the graphic to the map
+                  //      var attributes = {"lat":pt.y.toFixed(2),"lon":pt.x.toFixed(2)};
+                  //      var infoTemplate = new InfoTemplate("Your Location","Latitude: ${lat} <br/>Longitude: ${lon}");
+                        var graphic = new Graphic(pt,symbol);
+                        map.graphics.add(graphic);
+                        // Position the map
+                        map.centerAndZoom(pt,13);
+                        utils.setStyle("progress", "progress hidden");
+                      }
+                    function errorHandler(err) {
+                        utils.setStyle("progress", "progress hidden");
+                        if(err.code == 1) {
+                          alert("Error: Access is denied!");
+                        } else if ( err.code == 2) {
+                          alert("Error: Position is unavailable!");
+                        } else 
+                          alert("Error: " + err);
+                      }
+               
+                      function clearGeolocationGraphics() {
+                        map.infoWindow.hide();
+                        map.graphics.clear();       
+                      }
+                      function createPictureSymbol(url, xOffset, yOffset, xWidth, yHeight) {
+                        return new PictureMarkerSymbol(
+                        {
+                          "angle": 0,
+                          "xoffset": xOffset, "yoffset": yOffset, "type": "esriPMS",
+                          "url": url,  
+                          "contentType": "image/png",
+                          "width":xWidth, "height": yHeight
+                        });
+                      }
+                });  */
+        </script> 
+        
+        <script type="text/javascript">
+        $(document).on("pageinit", "#p1", function( event ) {
+            localStorage.clear();
+            $.ajax({
+                url: "getSpecies.jsp",
+                beforeSend: function() {  $.mobile.loading('show'); $("#overlayblock").show();}, //Show spinner
+                complete: function() {  $.mobile.loading('hide'); $("#overlayblock").hide();}, //Hide spinner
+                success: function(data) {
+                    $("#FTListitem").empty();
+                    $("#FTListitem").append(data).listview('refresh');
+                    $("#FTListitem").listview("refresh");            
+                }
+            });  
+        });
+       $(document).on("click", "#FTListitem li", function( event ) {
+           var fishType=this.getAttribute('data-value');
+           $.ajax({
+               url: "searchByFishType.jsp",
+               data:{fishTypeN:fishType},
+               beforeSend: function() {  $.mobile.loading('show'); $("#overlayblock").show();}, //Show spinner
+               complete: function() {  $.mobile.loading('hide'); $("#overlayblock").hide();}, //Hide spinner
+               success: function(data) {
+            	   alert(data);
+                   require(["esri/map", 
+                             "esri/layers/FeatureLayer", 
+                             "esri/tasks/query",
+                             "esri/InfoTemplate",
+                             "esri/dijit/InfoWindow",
+                             "dojo/dom-construct",
+                             "dojo/string",
+                             "esri/geometry/Point", 
+                             "esri/graphic", 
+                             "esri/symbols/PictureMarkerSymbol", 
+                             "dojo/on", 
+                             "dojo/dom", 
+                             "dojo/domReady!"] , function(Map, FeatureLayer, Query, InfoTemplate, InfoWindow, domConstruct, string, Point, Graphic, PictureMarkerSymbol, on, dom) {
+                        "use strict" //cannot use undeclared var
+                        //create map
+                        map = new Map("mapDiv", {
+                        center: [-121.881887,37.336535 ],  //SJSU coordinates
+                        zoom: 8,   //zoom to the bay are
+                        basemap: "streets", 
+                        //the map automatically resizes if the browser window or ContentPane widget enclosing the map is resized.
+                        autoResize: true     //auto size based on the window size
+                      });
+                        
+                        map.on("load", function (){
+                            var obj = JSON.parse(data);
+                            var fishData = obj.result;
+                            var sumLat=0,sumLon=0;
+                            var dataSize = fishData.length;
+                            var pointInfo = new InfoTemplate("Fish Point",
+                            "Release County:${county}<br/>Release Water:${water}<br/>Season:${season}<br/>");
+                            var pointSymbol = new createPictureSymbol("https://raw.githubusercontent.com/Esri/solutions-symbology-data/master/symbology/web/png/Fishing-Site.png",0,12,14,16);          
+                            for(var i=0; i<dataSize;i++){
+                                var fishLat = Number(Number(fishData[i].lat).toFixed(4));
+                                var fishLon = Number(Number(fishData[i].lon).toFixed(4));   
+                                sumLat = sumLat + fishLat;
+                                sumLon = sumLon + fishLon;
+                                var fishPoint = new Point([fishLon,fishLat]);
+                                var pointAttr = {"lat":fishPoint.x,"lon":fishPoint.y,"county":fishData[i].County,
+                                                 "water":fishData[i].Water,"season":fishData[i].Season};
+                                var pointGraphic = new Graphic(fishPoint,pointSymbol,pointAttr,pointInfo);
+                                map.graphics.add(pointGraphic);
+                                 
+                            }
+                            var avgLat = Number(sumLat/dataSize).toFixed(4);
+                            var avgLon = Number(sumLon/dataSize).toFixed(4);
+                            var centerPoint = new Point([Number(avgLon),Number(avgLat)]); 
+                            var fake_center = new Point(-121.881887,37.336535);
+                            map.centerAndZoom(fake_center,6);
+                        
+                            
+                        });                     
+                        
+                          
+                          
+                        //set popup
+                        var popup = map.infoWindow;
+                        popup.highlight = false;
+                        popup.titleInBody = false;
+                        //get symbol
+                        var symbol = new createPictureSymbol("http://icon-park.com/imagefiles/location_map_pin_blue5.png",0,12,14,16);
+                        // Wire events
+                        on(dom.byId("btnGeolocation"),"click",showGeolocation);
+                        on(dom.byId("btnClear"), "click", clearGeolocationGraphics);
+                        //show current location
+                        function showGeolocation() {
+                            if (navigator.geolocation){
+                              navigator.geolocation.getCurrentPosition(showLocation, errorHandler);
+                              utils.setStyle("progress", "progress");
+                            } else {
+                              alert("Sorry, your browser doesn't support geolocation.");      
+                            }
+                          }
+                        function showLocation(position) {
+                            // Create a point
+                            var pt = new Point(position.coords.longitude,position.coords.latitude);
+                            // Create a symbol and pop-up template and add the graphic to the map
+                      //      var attributes = {"lat":pt.y.toFixed(2),"lon":pt.x.toFixed(2)};
+                      //      var infoTemplate = new InfoTemplate("Your Location","Latitude: ${lat} <br/>Longitude: ${lon}");
+                            var graphic = new Graphic(pt,symbol);
+                            map.graphics.add(graphic);
+                            // Position the map
+                            map.centerAndZoom(pt,13);
+                            utils.setStyle("progress", "progress hidden");
+                          }
+                        function errorHandler(err) {
+                            utils.setStyle("progress", "progress hidden");
+                            if(err.code == 1) {
+                              alert("Error: Access is denied!");
+                            } else if ( err.code == 2) {
+                              alert("Error: Position is unavailable!");
+                            } else 
+                              alert("Error: " + err);
+                          }
+                   
+                          function clearGeolocationGraphics() {
+                            map.infoWindow.hide();
+                            map.graphics.clear();       
+                          }
+                          function createPictureSymbol(url, xOffset, yOffset, xWidth, yHeight) {
+                            return new PictureMarkerSymbol(
+                            {
+                              "angle": 0,
+                              "xoffset": xOffset, "yoffset": yOffset, "type": "esriPMS",
+                              "url": url,  
+                              "contentType": "image/png",
+                              "width":xWidth, "height": yHeight
+                            });
+                          }
+                    }); 
+               }
+            });   
+        });
+        $(document).on("click", "#search", function(e){ 
+            var street = $('#street').val();
+            var city = $('#city').val();
+            var state = $('#state').val();
+            var zipcode = $('#zipcode').val();
+            $.ajax({
+                url: "getAddress.jsp",
+                data:{street: street, city: city, state : state, zipcode : zipcode},
+                beforeSend: function() {  $.mobile.loading('show'); $("#overlayblock").show();}, //Show spinner
+                complete: function() {  $.mobile.loading('hide'); $("#overlayblock").hide();}, //Hide spinner
+                success: function(data) {
+                    //alert(data);
+                    require(["esri/map", 
+                             "esri/layers/FeatureLayer", 
+                             "esri/tasks/query",
+                             "esri/InfoTemplate",
+                             "esri/dijit/InfoWindow",
+                             "dojo/dom-construct",
+                             "dojo/string",
+                             "esri/geometry/Point", 
+                             "esri/graphic", 
+                             "esri/symbols/PictureMarkerSymbol", 
+                             "dojo/on", 
+                             "dojo/dom", 
+                             "dojo/domReady!"] , function(Map, FeatureLayer, Query, InfoTemplate, InfoWindow, domConstruct, string, Point, Graphic, PictureMarkerSymbol, on, dom) {
+                        "use strict" //cannot use undeclared var
+                        //create map
+                        var obj = JSON.parse(data);
+                        var fishData = obj.result;
+                        var fishx = Number(Number(fishData[0].centerx).toFixed(4));
+                        var fishx = Number(Number(fishData[0].centery).toFixed(4));
+                        //var fishx = Number(Number(fishData[0].lon).toFixed(4));
+                        //var fishy = Number(Number(fishData[0].lat).toFixed(4));
+                        map = new Map("mapDiv", {
+                        center: [-121.881887,37.336535],  //SJSU coordinates
+                        zoom: 8,   //zoom to the bay are
+                        basemap: "streets", 
+                        //the map automatically resizes if the browser window or ContentPane widget enclosing the map is resized.
+                        autoResize: true     //auto size based on the window size
+                      });
+                        
+                        map.on("load", function (){
+                            var obj = JSON.parse(data);
+                            var fishData = obj.result;
+                            var sumLat=0,sumLon=0;
+                            var dataSize = fishData.length;
+                            var pointInfo = new InfoTemplate("Fish Point",
+                            "Release County:${county}<br/>Release Water:${water}<br/>Season:${season}<br/>Species:${species}<br/>");
+                            var pointSymbol = new createPictureSymbol("https://raw.githubusercontent.com/Esri/solutions-symbology-data/master/symbology/web/png/Fishing-Site.png",0,12,14,16);          
+                            for(var i=0; i<dataSize;i++){
+                                var fishLat = Number(Number(fishData[i].lat).toFixed(4));
+                                var fishLon = Number(Number(fishData[i].lon).toFixed(4));   
+                                sumLat = sumLat + fishLat;
+                                sumLon = sumLon + fishLon;
+                                var fishPoint = new Point([fishLon,fishLat]);
+                                var pointAttr = {"lat":fishPoint.x,"lon":fishPoint.y,"county":fishData[i].County,
+                                                 "water":fishData[i].Water,"season":fishData[i].Season, "species":fishData[i].Species};
+                                var pointGraphic = new Graphic(fishPoint,pointSymbol,pointAttr,pointInfo);
+                                map.graphics.add(pointGraphic);
+                                 
+                            }
+                            var avgLat = Number(sumLat/dataSize).toFixed(4);
+                            var avgLon = Number(sumLon/dataSize).toFixed(4);
+                            var centerPoint = new Point([Number(avgLon),Number(avgLat)]); 
+                            var fake_center = new Point(-121.881887,37.336535);
+                            map.centerAndZoom(fake_center,6);
+                        
+                            
+                        });                     
+                        
+                          
+                          
+                        //set popup
+                        var popup = map.infoWindow;
+                        popup.highlight = false;
+                        popup.titleInBody = false;
+                        //get symbol
+                        var symbol = new createPictureSymbol("http://icon-park.com/imagefiles/location_map_pin_blue5.png",0,12,14,16);
+                        // Wire events
+                        on(dom.byId("btnGeolocation"),"click",showGeolocation);
+                        on(dom.byId("btnClear"), "click", clearGeolocationGraphics);
+                        //show current location
+                        function showGeolocation() {
+                            if (navigator.geolocation){
+                              navigator.geolocation.getCurrentPosition(showLocation, errorHandler);
+                              utils.setStyle("progress", "progress");
+                            } else {
+                              alert("Sorry, your browser doesn't support geolocation.");      
+                            }
+                          }
+                        function showLocation(position) {
+                            // Create a point
+                            var pt = new Point(position.coords.longitude,position.coords.latitude);
+                            // Create a symbol and pop-up template and add the graphic to the map
+                      //      var attributes = {"lat":pt.y.toFixed(2),"lon":pt.x.toFixed(2)};
+                      //      var infoTemplate = new InfoTemplate("Your Location","Latitude: ${lat} <br/>Longitude: ${lon}");
+                            var graphic = new Graphic(pt,symbol);
+                            map.graphics.add(graphic);
+                            // Position the map
+                            map.centerAndZoom(pt,13);
+                            utils.setStyle("progress", "progress hidden");
+                          }
+                        function errorHandler(err) {
+                            utils.setStyle("progress", "progress hidden");
+                            if(err.code == 1) {
+                              alert("Error: Access is denied!");
+                            } else if ( err.code == 2) {
+                              alert("Error: Position is unavailable!");
+                            } else 
+                              alert("Error: " + err);
+                          }
+                   
+                          function clearGeolocationGraphics() {
+                            map.infoWindow.hide();
+                            map.graphics.clear();       
+                          }
+                          function createPictureSymbol(url, xOffset, yOffset, xWidth, yHeight) {
+                            return new PictureMarkerSymbol(
+                            {
+                              "angle": 0,
+                              "xoffset": xOffset, "yoffset": yOffset, "type": "esriPMS",
+                              "url": url,  
+                              "contentType": "image/png",
+                              "width":xWidth, "height": yHeight
+                            });
+                          }
+                    }); 
+                }
+            });
+        });
+        </script>
+        
+        <style>
+            #overlayblock {
+                background-color: rgba(0, 0, 0, 0.8);
+                z-index: 9999;
+                position: fixed;
+                left: 0;
+                top: 0;
+                width: 100%;
+                height: 200%;
+                display: none;
+            }
+        </style>
+    </head>
+
+<body>
+    <div id="overlayblock"></div>
+    <div data-role="page" id="p1"> 
+        <div  data-role="header"><h1>Fishing</h1></div> 
+
+        <div  data-role="content">
+            <div id="Logo" style="max-height:300px;max-width:400px;border:solid;align:center">
+                <img src="http://previews.123rf.com/images/yumi071207/yumi0712071311/yumi071207131100185/26837985-cute-little-fish-icon-vector-Stock-Vector-fish.jpg"
+                style="max-height:300px; max-width:400px;">
+            </div>
+            <div data-role="tabs">
+                <div data-role="navbar">
+                <ul>
+                    <li><a href="#srhbyadress" class="ui-btn-active">Search by address</a></li>
+                    <li><a href="#srhbyfish">Search by fish type</a></li>
+                 </ul>
+                </div>
+            <div id="srhbyadress">
+               <label for="addressSearchTB">Please Enter Address:</label>
+               <input type="text" name="street" id="street" value="" data-mini="true" placeholder="Street">
+               <input type="text" name="city" id="city" value="" data-mini="true" placeholder="city">
+               <input type="text" name="state" id="state" value="" data-mini="true" placeholder="state">
+               <input type="text" name="zipcode" id="zipcode" value="" data-mini="true" placeholder="zipcode">  
+               <div class="ui-btn ui-input-btn ui-shadow">
+                  <input type="button" id="search" data-corners="false" data-enhanced="true" value="Search" onclick="window.location='#p2';">Search
+               </div>
+            </div>
+            <div id="srhbyfish">
+                <div data-role="collapsible" data-collapsed="true">
+                    <h4>Please select fish type</h4>
+                     <form class="ui-filterable">
+                        <input id="fishDataFilter" data-type="search" placeholder="Please enter the first letter of fish type Example 'S' for Salmon">
+                    </form>
+                    <ul data-role="listview" data-filter="true" data-input="#fishDataFilter" data-inset="true" id="FTListitem">
+                   
+                    </ul>
+                </div>
+            </div>
+          </div>
+        </div>  
+    </div> 
+    
+    <div data-role="page" id="p2"> 
+        <div  data-role="header"><h1>SearchResult</h1></div> 
+        <div  data-role="content">
+        
+            <div id="mapDiv" style="max-height:400px;max-width:400px;border:solid;align:center">    
+            </div>
+            
+            <div class="ui-btn ui-input-btn ui-shadow ui-corner-all ui-btn-inline">
+                  <input type="button" data-corners="false" data-enhanced="true" id="btnGeolocation">Pin
+            </div>  
+                
+            <div class="ui-btn ui-input-btn ui-shadow ui-corner-all ui-btn-inline">
+                  <input type="button" data-corners="false" data-enhanced="true" id="btnClear"> Clear
+            </div>  
+                        
+            <ul data-role="listview" id="resListView">
+
+            </ul>
+        </div> 
+    </div> 
+   
+            
+    
+</body>
+</html>
